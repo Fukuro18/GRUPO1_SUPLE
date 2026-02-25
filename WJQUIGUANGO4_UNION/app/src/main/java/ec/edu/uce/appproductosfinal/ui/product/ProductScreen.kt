@@ -231,14 +231,28 @@ fun ProductScreen(
                                 // La URL de S3 la devuelve el Lambda en el campo "url"
                                 val urlS3 = syncResponse.body()?.url ?: finalProduct.imageUri
                                 
-                                // Enviar correo si es un nuevo producto, con la URL real de S3
+                                // Enviar correo si es un nuevo producto
                                 if (isNewProduct) {
+                                    // 1. Correo normal (EmailService)
                                     ec.edu.uce.appproductosfinal.data.network.EmailService.enviarCorreoNuevoProducto(
                                         destinatario = "lossininternetapp@gmail.com",
                                         descripcion = finalProduct.descripcion,
                                         costo = finalProduct.costo,
                                         imageUri = urlS3  // ← URL real de S3, no la local del teléfono
                                     )
+                                    
+                                    // 2. Correo desde el web service "mailinsertrec"
+                                    try {
+                                        RetrofitClient.instance.mailInsertRec(
+                                            ec.edu.uce.appproductosfinal.data.network.MailInsertRequest(
+                                                email_grupo = "lossininternetapp@gmail.com",
+                                                producto_descripcion = finalProduct.descripcion,
+                                                producto_costo = finalProduct.costo
+                                            )
+                                        )
+                                    } catch(e: Exception) {
+                                        Log.e("ProductScreen", "Error llamando mailinsertrec: \${e.message}")
+                                    }
                                 }
                             } catch (e: Exception) { }
                             onSave()

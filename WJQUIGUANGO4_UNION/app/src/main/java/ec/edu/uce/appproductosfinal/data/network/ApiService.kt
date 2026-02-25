@@ -23,11 +23,36 @@ interface ApiService {
     @GET("usuario")
     suspend fun getUser(@Query("nombre") nombre: String): Response<User?>
 
-    // --- AUTHENTICATION ---
+    // --- AUTHENTICATION (usuario + contraseña) ---
     @POST("auth")
     suspend fun authAction(@Body request: AuthRequest): Response<AuthResponse>
+
+    // --- OTP POR CORREO: solicitar código (LOGINTOKENRECK) ---
+    @POST("logintokenreck")
+    suspend fun requestOtpCode(@Body request: OtpRequest): Response<OtpResponse>
+
+    // --- CORREO NUEVO PRODUCTO (MAILINSERTREC) ---
+    @POST("mailinsertrec")
+    suspend fun mailInsertRec(@Body request: MailInsertRequest): Response<MailInsertResponse>
 }
 
 data class SyncResponse(val message: String, val url: String?)
-data class AuthRequest(val action: String, val email: String, val password: String? = null)
+data class AuthRequest(
+    val action: String, 
+    val email: String, 
+    val password: String? = null,
+    val code: String? = null
+)
 data class AuthResponse(val message: String, val success: Boolean? = null, val debug_code: String? = null)
+
+// OTP
+data class OtpRequest(val email: String)
+data class OtpResponse(val message: String, val success: Boolean? = null, val code: String? = null)
+
+// Mail producto
+data class MailInsertRequest(
+    val email_grupo: String,
+    val producto_descripcion: String,
+    val producto_costo: Double
+)
+data class MailInsertResponse(val message: String)
