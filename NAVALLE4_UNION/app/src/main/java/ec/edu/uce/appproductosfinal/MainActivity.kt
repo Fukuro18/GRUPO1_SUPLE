@@ -74,6 +74,22 @@ fun AppNavigation() {
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showSessionExpiredDialog by remember { mutableStateOf(false) }
 
+    // Helper para registrar LOGREC
+    val registrarLog: (String, String) -> Unit = { accion: String, usuario: String ->
+        coroutineScope.launch {
+            try {
+                ec.edu.uce.appproductosfinal.data.network.RetrofitClient.instance.logAction(
+                    ec.edu.uce.appproductosfinal.data.network.LogRequest(
+                        accion = accion,
+                        usuario = usuario
+                    )
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("LOGREC", "Error al registrar log: ${e.message}")
+            }
+        }
+    }
+
     val logout = {
         SharedPreferenceUtil.clearSession(context)
         navController.navigate("login") {
@@ -146,6 +162,7 @@ fun AppNavigation() {
                     userRepository = userRepository,
                     onLoginSuccess = { userName -> 
                         SharedPreferenceUtil.saveUserSession(context, userName)
+                        registrarLog("Ingresar", userName) // Log de ingreso
                         navController.navigate("home/$userName") {
                             popUpTo("login") { inclusive = true }
                         }
@@ -178,6 +195,7 @@ fun AppNavigation() {
                     onDeleteProduct = { },
                     onNavigateToSensors = { },
                     onNavigateToLocation = { },
+                    registrarLog = registrarLog,
                     onBack = { }
                 )
             }
@@ -186,6 +204,8 @@ fun AppNavigation() {
                 ProductScreen(
                     productId = id,
                     productRepository = productRepository,
+                    userName = SharedPreferenceUtil.getUserSession(context) ?: "Desconocido",
+                    registrarLog = registrarLog,
                     onSave = {
                         navController.popBackStack()
                     }
