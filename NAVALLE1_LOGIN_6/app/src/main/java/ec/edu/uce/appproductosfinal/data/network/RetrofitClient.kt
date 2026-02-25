@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "https://n10afy6p05.execute-api.us-east-1.amazonaws.com/prod/"
+    private const val BASE_URL = "https://cjnulrdpyg.execute-api.us-east-1.amazonaws.com/prod/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

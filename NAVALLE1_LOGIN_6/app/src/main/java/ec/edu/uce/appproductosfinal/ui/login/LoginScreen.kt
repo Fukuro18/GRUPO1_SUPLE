@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import ec.edu.uce.appproductosfinal.R
 import ec.edu.uce.appproductosfinal.data.UserRepository
 import ec.edu.uce.appproductosfinal.data.network.AuthRequest
+import ec.edu.uce.appproductosfinal.data.network.EmailService
 import ec.edu.uce.appproductosfinal.data.network.RetrofitClient
 import kotlinx.coroutines.launch
 
@@ -101,16 +102,32 @@ fun LoginScreen(
                             
                             try {
                                 if (!isCodeSent) {
-                                    // Solicitar código
+                                    // Solicitar código a AWS
                                     val response = RetrofitClient.instance.authAction(AuthRequest("request_code", email))
                                     if (response.isSuccessful && response.body() != null) {
-                                        isCodeSent = true
-                                        // MODIFICACIÓN: Mostramos el código generado en pantalla para que apruebes el examen rápido
-                                        val generatedCode = response.body()?.debug_code ?: "Revisa consola AWS"
-                                        successMessage = "¡Simulación de correo! Tu código es: $generatedCode"
+                                        
+                                        // 1. Tomamos el código real generado por AWS
+                                        val generatedCode = response.body()?.debug_code ?: ""
+                                        
+                                        if (generatedCode.isNotEmpty()) {
+                                            // 2. Enviamos el correo electrónicamente desde Android Mismo
+                                            val enviadoCorrecto = EmailService.enviarCodigoCorreo(email, generatedCode)
+                                            
+                                            if (enviadoCorrecto) {
+                                                isCodeSent = true
+                                                successMessage = "¡Código de 6 dígitos enviado a $email!"
+                                            } else {
+                                                successMessage = "Error enviando mail. Código simulado: $generatedCode (Configura tus credenciales o usa este código)"
+                                                isCodeSent = true
+                                            }
+                                        } else {
+                                            isCodeSent = true
+                                            successMessage = "Código generado (No se pudo obtener para envío directo)"
+                                        }
+                                        
                                     } else {
                                         showError = true
-                                        errorMessage = "Error al solicitar código"
+                                        errorMessage = "Error al solicitar código a AWS"
                                     }
                                 } else {
                                     // Verificar código
@@ -139,13 +156,13 @@ fun LoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (isCodeSent) "Verificar e Ingresar" else "Enviar Código")
+                    Text(if (isCodeSent) "Verificar e Ingresar" else "Obtener Código por Correo")
                 }
             }
 
             if (successMessage.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                // Mensaje en verde para que resalte
+                // Mensaje en verde
                 Text(successMessage, color = androidx.compose.ui.graphics.Color(0xFF00AA00))
             }
 
