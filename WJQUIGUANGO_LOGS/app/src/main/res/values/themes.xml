@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.AppProductos" parent="android:Theme.Material.Light.NoActionBar">
-        <!-- Forzar desactivación del modo oscuro -->
-        <item name="android:forceDarkAllowed" tools:targetApi="q" xmlns:tools="http://schemas.android.com/tools">false</item>
-    </style>
-</resources>
