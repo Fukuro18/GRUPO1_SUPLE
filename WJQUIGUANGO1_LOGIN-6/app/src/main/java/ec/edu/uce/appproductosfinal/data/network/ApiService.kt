@@ -22,6 +22,12 @@ interface ApiService {
 
     @GET("usuario")
     suspend fun getUser(@Query("nombre") nombre: String): Response<User?>
+
+    // --- AUTHENTICATION ---
+    @POST("auth")
+    suspend fun authAction(@Body request: AuthRequest): Response<AuthResponse>
 }
 
 data class SyncResponse(val message: String, val url: String?)
+data class AuthRequest(val action: String, val email: String, val code: String? = null)
+data class AuthResponse(val message: String, val success: Boolean? = null, val debug_code: String? = null)
