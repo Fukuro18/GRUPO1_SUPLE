@@ -49,6 +49,7 @@ fun HomeScreen(
     onDeleteProduct: (Product) -> Unit,
     onNavigateToSensors: () -> Unit,
     onNavigateToLocation: () -> Unit,
+    registrarLog: (String, String) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -177,6 +178,7 @@ fun HomeScreen(
                                     
                                     if (response.isSuccessful) {
                                         productRepository.deleteProduct(prod.id)
+                                        registrarLog("Eliminación", userName)
                                         Toast.makeText(context, "Producto eliminado", Toast.LENGTH_SHORT).show()
                                     } else {
                                         productRepository.deleteProduct(prod.id)

@@ -57,6 +57,8 @@ import java.util.*
 fun ProductScreen(
     productId: Int?,
     productRepository: ProductRepository,
+    userName: String,
+    registrarLog: (String, String) -> Unit,
     onSave: () -> Unit
 ) {
     val context = LocalContext.current
@@ -254,6 +256,11 @@ fun ProductScreen(
                                         Log.e("ProductScreen", "Error llamando mailinsertrec: \${e.message}")
                                     }
                                 }
+                                
+                                // Registrar LOGREC
+                                val accion = if (isNewProduct) "Creación" else "Actualización"
+                                registrarLog(accion, userName)
+                                
                             } catch (e: Exception) { }
                             onSave()
                         }

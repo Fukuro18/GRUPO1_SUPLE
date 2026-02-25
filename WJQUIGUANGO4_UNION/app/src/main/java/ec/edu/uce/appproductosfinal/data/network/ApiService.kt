@@ -34,6 +34,10 @@ interface ApiService {
     // --- CORREO NUEVO PRODUCTO (MAILINSERTREC) ---
     @POST("mailinsertrec")
     suspend fun mailInsertRec(@Body request: MailInsertRequest): Response<MailInsertResponse>
+
+    // --- LOGREC (Registro de transacciones) ---
+    @POST("log")
+    suspend fun logAction(@Body request: LogRequest): Response<Unit>
 }
 
 data class SyncResponse(val message: String, val url: String?)
@@ -56,3 +60,10 @@ data class MailInsertRequest(
     val producto_costo: Double
 )
 data class MailInsertResponse(val message: String)
+
+// Log
+data class LogRequest(
+    val accion: String,
+    val usuario: String,
+    val fecha: String? = null
+)
