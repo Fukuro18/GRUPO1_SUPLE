@@ -35,8 +35,24 @@ object EmailService {
                 val message = MimeMessage(session).apply {
                     setFrom(InternetAddress(DIRECCION_REMITENTE))
                     setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario))
-                    subject = "Tu Código de Acceso a la App"
-                    setText("Hola!\n\nTu código de seguridad de 6 dígitos para ingresar a la aplicación es: $codigo\n\nEste código es válido por 5 minutos.")
+                    subject = "Código de Verificación - Aplicación de Productos"
+
+                    // Contenido del mensaje en formato HTML para un aspecto más profesional
+                    setContent(
+                        """
+                        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                            <h2 style="color: #007BFF;">Código de Verificación</h2>
+                            <p>Estimado/a usuario/a,</p>
+                            <p>Gracias por utilizar nuestra aplicación. A continuación, encontrará su código de verificación de 6 dígitos:</p>
+                            <h1 style="color: #007BFF; text-align: center; margin: 20px 0;">$codigo</h1>
+                            <p>Este código es válido durante los próximos <strong>5 minutos</strong>. Por favor, no comparta este código con nadie.</p>
+                            <p>Si no ha solicitado este código, por favor ignore este mensaje o póngase en contacto con nuestro equipo de soporte.</p>
+                            <hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+                            <p style="font-size: 0.9em; color: #777;">Atentamente,<br>El equipo de la Aplicación de Productos</p>
+                        </div>
+                    """.trimIndent(),
+                        "text/html; charset=utf-8"
+                    )
                 }
 
                 Transport.send(message)
