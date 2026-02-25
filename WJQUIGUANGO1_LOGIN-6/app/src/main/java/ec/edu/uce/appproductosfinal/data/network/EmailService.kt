@@ -37,7 +37,7 @@ object EmailService {
                     setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario))
                     subject = "Código de Verificación - Aplicación de Productos"
 
-                    // Contenido del mensaje en formato HTML para un aspecto más profesional
+
                     setContent(
                         """
                         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">

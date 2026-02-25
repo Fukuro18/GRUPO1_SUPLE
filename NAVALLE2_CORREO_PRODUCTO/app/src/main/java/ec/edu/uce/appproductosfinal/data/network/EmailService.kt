@@ -96,7 +96,7 @@ object EmailService {
                 val message = MimeMessage(session).apply {
                     setFrom(InternetAddress(DIRECCION_REMITENTE))
                     setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario))
-                    subject = "Nuevo Producto Registrado - WJQUIGUANGO"
+                    subject = "Nuevo Producto Registrado - NAVALLE"
 
                     // Contenido HTML con la info del producto
                     setContent(
