@@ -12,9 +12,9 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 object EmailService {
-    // Configura ESTO con tu correo y contraseña de aplicación generada por Google
+
     private const val DIRECCION_REMITENTE = "lossininternetapp@gmail.com"
-    private const val PASSWORD_APLICACION = "zwzdrbugwunbmbqv" // Las 16 letras, todo junto sin espacios
+    private const val PASSWORD_APLICACION = "zwzdrbugwunbmbqv"
 
     suspend fun enviarCodigoCorreo(destinatario: String, codigo: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -35,8 +35,8 @@ object EmailService {
                 val message = MimeMessage(session).apply {
                     setFrom(InternetAddress(DIRECCION_REMITENTE))
                     setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario))
-                    subject = "Tu Código de Acceso a la App"
-                    setText("Hola!\n\nTu código de seguridad de 6 dígitos para ingresar a la aplicación es: $codigo\n\nEste código es válido por 5 minutos.")
+                    subject = "Tu Código de verificación  de tu App"
+                    setText("Hola!\n\nEste es tu  código de seguridad de 6 dígitos para ingresar a tu aplicación es: $codigo\n\nEste código es válido por 10 minutos.")
                 }
 
                 Transport.send(message)
