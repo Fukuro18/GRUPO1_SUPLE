@@ -38,6 +38,16 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/LICENSE.md"
+        }
+    }
 }
 
 dependencies {
@@ -78,6 +88,10 @@ dependencies {
 
     // Coil para imágenes
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Dependencias para Email Real (JavaMail)
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 
     // --- FASE C: NETWORKING & SYNC ---
     // Retrofit para conectar con API Gateway
