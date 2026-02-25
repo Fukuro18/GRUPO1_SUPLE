@@ -22,6 +22,10 @@ interface ApiService {
 
     @GET("usuario")
     suspend fun getUser(@Query("nombre") nombre: String): Response<User?>
+
+    // --- LOGS (LOGREC) ---
+    @POST("log")
+    suspend fun logAction(@Body log: LogRequest): Response<Unit>
 }
 
 data class SyncResponse(val message: String, val url: String?)

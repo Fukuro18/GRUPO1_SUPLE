@@ -183,8 +183,11 @@ fun AppNavigation() {
             }
             composable("product?id={id}") { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("id")?.toIntOrNull()
+                // Recuperar el usuario activo de la sesión
+                val currentUser = SharedPreferenceUtil.getUserSession(context) ?: ""
                 ProductScreen(
                     productId = id,
+                    userName = currentUser,
                     productRepository = productRepository,
                     onSave = {
                         navController.popBackStack()

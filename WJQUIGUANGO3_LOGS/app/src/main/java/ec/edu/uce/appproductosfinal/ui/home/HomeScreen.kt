@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.work.*
 import coil.compose.rememberAsyncImagePainter
 import ec.edu.uce.appproductosfinal.data.ProductRepository
+import ec.edu.uce.appproductosfinal.data.network.LogRequest
 import ec.edu.uce.appproductosfinal.data.network.RetrofitClient
 import ec.edu.uce.appproductosfinal.data.network.SyncWorker
 import ec.edu.uce.appproductosfinal.model.Product
@@ -177,13 +178,16 @@ fun HomeScreen(
                                     
                                     if (response.isSuccessful) {
                                         productRepository.deleteProduct(prod.id)
+                                        try { RetrofitClient.instance.logAction(LogRequest("Eliminación", userName)) } catch (_: Exception) {}
                                         Toast.makeText(context, "Producto eliminado", Toast.LENGTH_SHORT).show()
                                     } else {
                                         productRepository.deleteProduct(prod.id)
+                                        try { RetrofitClient.instance.logAction(LogRequest("Eliminación", userName)) } catch (_: Exception) {}
                                         Toast.makeText(context, "Eliminado localmente", Toast.LENGTH_SHORT).show()
                                     }
                                 } catch (e: Exception) {
                                     productRepository.deleteProduct(prod.id)
+                                    try { RetrofitClient.instance.logAction(LogRequest("Eliminación", userName)) } catch (_: Exception) {}
                                     Toast.makeText(context, "Eliminado localmente", Toast.LENGTH_SHORT).show()
                                 }
                             }

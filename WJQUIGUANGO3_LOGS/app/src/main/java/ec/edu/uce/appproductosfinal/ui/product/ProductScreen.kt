@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
 import ec.edu.uce.appproductosfinal.data.ProductRepository
+import ec.edu.uce.appproductosfinal.data.network.LogRequest
 import ec.edu.uce.appproductosfinal.data.network.ProductDto
 import ec.edu.uce.appproductosfinal.data.network.RetrofitClient
 import ec.edu.uce.appproductosfinal.model.Product
@@ -56,6 +57,7 @@ import java.util.*
 @Composable
 fun ProductScreen(
     productId: Int?,
+    userName: String,
     productRepository: ProductRepository,
     onSave: () -> Unit
 ) {
@@ -226,6 +228,9 @@ fun ProductScreen(
                             try {
                                 val productDto = finalProduct.toDto(context)
                                 RetrofitClient.instance.syncProduct(productDto)
+                                // LOGREC: registrar acción
+                                val accion = if (productId == null) "Creación" else "Actualización"
+                                try { RetrofitClient.instance.logAction(LogRequest(accion, userName)) } catch (_: Exception) {}
                             } catch (e: Exception) { }
                             onSave()
                         }

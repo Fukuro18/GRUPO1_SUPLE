@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import ec.edu.uce.appproductosfinal.R
 import ec.edu.uce.appproductosfinal.data.UserRepository
+import ec.edu.uce.appproductosfinal.data.network.LogRequest
 import ec.edu.uce.appproductosfinal.data.network.RetrofitClient
 import ec.edu.uce.appproductosfinal.utils.SecurityUtils
 import kotlinx.coroutines.launch
@@ -106,6 +107,7 @@ fun LoginScreen(
                             val localUser = userRepository.findUser(nombre, hashedPassword)
                             
                             if (localUser != null) {
+                                try { RetrofitClient.instance.logAction(LogRequest("Ingresar", localUser.nombre)) } catch (_: Exception) {}
                                 onLoginSuccess(localUser.nombre)
                             } else {
                                 try {
@@ -114,6 +116,7 @@ fun LoginScreen(
                                         val cloudUser = response.body()!!
                                         if (cloudUser.password == hashedPassword) {
                                             userRepository.addUser(cloudUser)
+                                            try { RetrofitClient.instance.logAction(LogRequest("Ingresar", cloudUser.nombre)) } catch (_: Exception) {}
                                             onLoginSuccess(cloudUser.nombre)
                                         } else { showError = true }
                                     } else { showError = true }
