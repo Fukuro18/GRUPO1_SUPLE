@@ -30,4 +30,3 @@ object RetrofitClient {
     }
 }
 
-//uwu comentarios post
