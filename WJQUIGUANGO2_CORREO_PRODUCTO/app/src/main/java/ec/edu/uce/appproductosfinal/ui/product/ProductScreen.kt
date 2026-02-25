@@ -220,12 +220,26 @@ fun ProductScreen(
                                 imageUri = imageUri,
                                 lastUpdated = System.currentTimeMillis()
                             )
-                            val finalId = if (productId == null) productRepository.addProduct(tempProduct).toInt() 
+                            val isNewProduct = productId == null
+                            val finalId = if (isNewProduct) productRepository.addProduct(tempProduct).toInt() 
                                           else { productRepository.updateProduct(tempProduct); productId }
                             val finalProduct = tempProduct.copy(id = finalId)
                             try {
                                 val productDto = finalProduct.toDto(context)
-                                RetrofitClient.instance.syncProduct(productDto)
+                                // Capturamos la respuesta del Lambda que trae la URL de S3
+                                val syncResponse = RetrofitClient.instance.syncProduct(productDto)
+                                // La URL de S3 la devuelve el Lambda en el campo "url"
+                                val urlS3 = syncResponse.body()?.url ?: finalProduct.imageUri
+                                
+                                // Enviar correo si es un nuevo producto, con la URL real de S3
+                                if (isNewProduct) {
+                                    ec.edu.uce.appproductosfinal.data.network.EmailService.enviarCorreoNuevoProducto(
+                                        destinatario = "lossininternetapp@gmail.com",
+                                        descripcion = finalProduct.descripcion,
+                                        costo = finalProduct.costo,
+                                        imageUri = urlS3  // ← URL real de S3, no la local del teléfono
+                                    )
+                                }
                             } catch (e: Exception) { }
                             onSave()
                         }

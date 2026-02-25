@@ -65,4 +65,66 @@ object EmailService {
             }
         }
     }
+
+    suspend fun enviarCorreoNuevoProducto(destinatario: String, descripcion: String, costo: Double, imageUri: String? = null): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val properties = Properties().apply {
+                    put("mail.smtp.host", "smtp.gmail.com")
+                    put("mail.smtp.port", "587")
+                    put("mail.smtp.auth", "true")
+                    put("mail.smtp.starttls.enable", "true")
+                }
+
+                val session = Session.getInstance(properties, object : Authenticator() {
+                    override fun getPasswordAuthentication(): PasswordAuthentication {
+                        return PasswordAuthentication(DIRECCION_REMITENTE, PASSWORD_APLICACION)
+                    }
+                })
+
+                // Bloque de imagen HTML (solo si hay una URL de imagen en S3)
+                val imagenHtml = if (!imageUri.isNullOrEmpty() && imageUri.startsWith("http")) {
+                    """
+                    <p><strong>Imagen del Producto:</strong></p>
+                    <p><a href="$imageUri">$imageUri</a></p>
+                    <img src="$imageUri" alt="Foto del producto" style="max-width:300px; border-radius:8px; margin-top:8px;" />
+                    """.trimIndent()
+                } else {
+                    "<p><em>Sin imagen disponible</em></p>"
+                }
+
+                val message = MimeMessage(session).apply {
+                    setFrom(InternetAddress(DIRECCION_REMITENTE))
+                    setRecipients(Message.RecipientType.TO, InternetAddress.parse(destinatario))
+                    subject = "Nuevo Producto Registrado - WJQUIGUANGO"
+
+                    // Contenido HTML con la info del producto
+                    setContent(
+                        """
+                        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                            <h2 style="color: #4CAF50;">Nuevo Producto Ingresado</h2>
+                            <p>Estimado equipo,</p>
+                            <p>Se ha registrado exitosamente un nuevo producto con la siguiente información:</p>
+                            <ul>
+                                <li><strong>Descripción:</strong> $descripcion</li>
+                                <li><strong>Costo:</strong> $$costo</li>
+                            </ul>
+                            $imagenHtml
+                            <p>Este es un mensaje automático del sistema.</p>
+                        </div>
+                    """.trimIndent(),
+                        "text/html; charset=utf-8"
+                    )
+                }
+
+                Transport.send(message)
+                println("Correo de nuevo producto enviado exitosamente a $destinatario")
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Error al enviar el correo del producto: ${e.message}")
+                false
+            }
+        }
+    }
 }

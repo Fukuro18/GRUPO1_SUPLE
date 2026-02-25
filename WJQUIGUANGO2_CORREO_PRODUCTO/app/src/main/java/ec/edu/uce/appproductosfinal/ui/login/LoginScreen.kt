@@ -13,12 +13,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import ec.edu.uce.appproductosfinal.R
 import ec.edu.uce.appproductosfinal.data.UserRepository
 import ec.edu.uce.appproductosfinal.data.network.AuthRequest
-import ec.edu.uce.appproductosfinal.data.network.EmailService
 import ec.edu.uce.appproductosfinal.data.network.RetrofitClient
+import ec.edu.uce.appproductosfinal.utils.SecurityUtils
 import kotlinx.coroutines.launch
 
 @Composable
@@ -32,12 +33,10 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
 
     var email by remember { mutableStateOf("") }
-    var codigo by remember { mutableStateOf("") }
-    var isCodeSent by remember { mutableStateOf(false) }
+    var password by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var isChecking by remember { mutableStateOf(false) }
-    var successMessage by remember { mutableStateOf("") }
 
     Scaffold { paddingValues ->
         Column(
@@ -58,37 +57,35 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo Electrónico") },
+                label = { Text("Correo Electrónico / Usuario") },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isChecking && !isCodeSent,
+                enabled = !isChecking,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = if (isCodeSent) ImeAction.Next else ImeAction.Done
+                    imeAction = ImeAction.Next
                 ),
                 keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
-                    onDone = { focusManager.clearFocus() }
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (isCodeSent) {
-                OutlinedTextField(
-                    value = codigo,
-                    onValueChange = { if (it.length <= 6) codigo = it },
-                    label = { Text("Código de 6 dígitos") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isChecking,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
-                    )
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isChecking,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (isChecking) {
                 CircularProgressIndicator()
@@ -98,54 +95,24 @@ fun LoginScreen(
                         coroutineScope.launch {
                             isChecking = true
                             showError = false
-                            successMessage = ""
                             
                             try {
-                                if (!isCodeSent) {
-                                    // Solicitar código a AWS
-                                    val response = RetrofitClient.instance.authAction(AuthRequest("request_code", email))
-                                    if (response.isSuccessful && response.body() != null) {
-                                        
-                                        // 1. Tomamos el código real generado por AWS
-                                        val generatedCode = response.body()?.debug_code ?: ""
-                                        
-                                        if (generatedCode.isNotEmpty()) {
-                                            // 2. Enviamos el correo electrónicamente desde Android Mismo
-                                            val enviadoCorrecto = EmailService.enviarCodigoCorreo(email, generatedCode)
-                                            
-                                            if (enviadoCorrecto) {
-                                                isCodeSent = true
-                                                successMessage = "¡Código de 6 dígitos enviado a $email!"
-                                            } else {
-                                                successMessage = "Error enviando mail. Código simulado: $generatedCode (Configura tus credenciales o usa este código)"
-                                                isCodeSent = true
-                                            }
-                                        } else {
-                                            isCodeSent = true
-                                            successMessage = "Código generado (No se pudo obtener para envío directo)"
+                                // Hasheamos la contraseña igual que en el registro
+                                val hashedPassword = SecurityUtils.hashPassword(password)
+                                val response = RetrofitClient.instance.authAction(AuthRequest("login", email, hashedPassword))
+                                if (response.isSuccessful && response.body()?.success == true) {
+                                    // Guardar datos de usuario localmente si queremos
+                                    try {
+                                        val userRes = RetrofitClient.instance.getUser(email)
+                                        if (userRes.isSuccessful && userRes.body() != null) {
+                                            userRepository.addUser(userRes.body()!!)
                                         }
-                                        
-                                    } else {
-                                        showError = true
-                                        errorMessage = "Error al solicitar código a AWS"
-                                    }
+                                    } catch(e: Exception) { /* ignore si no existe, igual pasamos */ }
+                                    
+                                    onLoginSuccess(email)
                                 } else {
-                                    // Verificar código
-                                    val response = RetrofitClient.instance.authAction(AuthRequest("verify_code", email, codigo))
-                                    if (response.isSuccessful && response.body()?.success == true) {
-                                        // Obtener / Guardar datos de usuario opcional o solo loguear
-                                        try {
-                                            val userRes = RetrofitClient.instance.getUser(email)
-                                            if (userRes.isSuccessful && userRes.body() != null) {
-                                                userRepository.addUser(userRes.body()!!)
-                                            }
-                                        } catch(e: Exception) { /* ignore si no existe, igual pasamos */ }
-                                        
-                                        onLoginSuccess(email)
-                                    } else {
-                                        showError = true
-                                        errorMessage = response.body()?.message ?: "Código inválido o expirado"
-                                    }
+                                    showError = true
+                                    errorMessage = response.body()?.message ?: "Contraseña incorrecta"
                                 }
                             } catch (e: Exception) {
                                 showError = true
@@ -156,14 +123,8 @@ fun LoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (isCodeSent) "Verificar e Ingresar" else "Obtener Código por Correo")
+                    Text("Ingresar")
                 }
-            }
-
-            if (successMessage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                // Mensaje en verde
-                Text(successMessage, color = androidx.compose.ui.graphics.Color(0xFF00AA00))
             }
 
             if (showError) {
@@ -172,14 +133,8 @@ fun LoginScreen(
             }
             
             Spacer(modifier = Modifier.height(8.dp))
-            if (isCodeSent) {
-                TextButton(onClick = { isCodeSent = false; codigo = ""; showError = false }, enabled = !isChecking) {
-                    Text("Volver a ingresar correo")
-                }
-            } else {
-                TextButton(onClick = onNavigateToRegister, enabled = !isChecking) {
-                    Text("¿No tienes cuenta? Regístrate aquí")
-                }
+            TextButton(onClick = onNavigateToRegister, enabled = !isChecking) {
+                Text("¿No tienes cuenta? Registrate aquí")
             }
         }
     }

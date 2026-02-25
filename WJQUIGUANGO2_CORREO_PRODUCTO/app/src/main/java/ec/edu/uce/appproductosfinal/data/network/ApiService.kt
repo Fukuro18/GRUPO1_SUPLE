@@ -29,5 +29,5 @@ interface ApiService {
 }
 
 data class SyncResponse(val message: String, val url: String?)
-data class AuthRequest(val action: String, val email: String, val code: String? = null)
+data class AuthRequest(val action: String, val email: String, val password: String? = null)
 data class AuthResponse(val message: String, val success: Boolean? = null, val debug_code: String? = null)
